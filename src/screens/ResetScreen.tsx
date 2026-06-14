@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { View, StyleSheet, Pressable, Text } from 'react-native';
-import { Screen, Txt, Button, Tag } from '../components/ui';
+import { View, StyleSheet, Pressable } from 'react-native';
+import { Screen, Txt, Button } from '../components/ui';
 import { colors, spacing, radius } from '../theme';
 import { CircleTimer } from '../components/CircleTimer';
 import { useStore } from '../store/useStore';
@@ -137,74 +137,102 @@ export function ResetScreen() {
 
   const progress = total ? elapsed / total : 0;
   const currentStep = exercise.steps[stepIdx];
+  const modeLabel = resolveModeLabel(exercise, params.mode);
 
   return (
     <Screen>
       <View style={styles.top}>
-        <Pressable onPress={abandon} hitSlop={12}>
+        <Pressable onPress={abandon} hitSlop={12} style={styles.edge}>
           <Txt variant="h3" color={colors.textMuted}>
             ✕
           </Txt>
         </Pressable>
-        <View style={styles.tags}>
-          <Tag text={exercise.category} color={colors.sky} />
-          {exercise.stealth && <Tag text="stealth" color={colors.primary} />}
+        <View style={styles.modePill}>
+          <Txt variant="tiny" color={colors.primaryDark}>
+            {modeLabel.toUpperCase()}
+          </Txt>
         </View>
+        <View style={styles.edge} />
       </View>
 
       {!started ? (
-        <View style={styles.intro}>
-          <Text style={styles.bigEmoji}>{exercise.icon}</Text>
-          <Txt variant="title" style={{ textAlign: 'center' }}>
-            {exercise.title}
-          </Txt>
-          <Txt
-            variant="body"
-            color={colors.textMuted}
-            style={{ textAlign: 'center', marginTop: spacing.sm, lineHeight: 22 }}
-          >
-            {exercise.summary}
-          </Txt>
-          <Txt variant="small" color={colors.textFaint} style={{ marginTop: spacing.md }}>
-            About {exercise.durationSec}s · {exercise.steps.length} steps
-          </Txt>
-          <Button title="Start reset" onPress={begin} style={styles.startBtn} />
-          <Pressable onPress={swapStealth} style={styles.awkward}>
-            <Txt variant="small" color={colors.primaryDark}>
-              😬 Too awkward at the office? Swap it →
+        <>
+          <View style={styles.stage}>
+            <View style={styles.orb}>
+              <View style={styles.orbHalo} />
+              <View style={styles.orbInner}>
+                <Txt variant="hero" style={styles.orbEmoji}>
+                  {exercise.icon}
+                </Txt>
+              </View>
+            </View>
+            <Txt variant="title" style={styles.centerText}>
+              {exercise.title}
             </Txt>
-          </Pressable>
-        </View>
-      ) : (
-        <View style={styles.player}>
-          <CircleTimer
-            progress={progress}
-            secondsLeft={stepLeft}
-            emoji={exercise.icon}
-            running={running}
-          />
-          <Txt variant="h2" style={styles.stepLabel}>
-            {currentStep?.label}
-          </Txt>
-
-          <View style={styles.controls}>
-            <Button
-              title={running ? 'Pause' : 'Resume'}
-              variant="secondary"
-              onPress={togglePause}
-              style={{ flex: 1 }}
-            />
-            <Button title="Finish" variant="ghost" onPress={finish} style={{ flex: 1 }} />
+            <Txt variant="body" color={colors.textMuted} style={styles.summary}>
+              {exercise.summary}
+            </Txt>
+            <Txt variant="small" color={colors.textFaint} style={styles.meta}>
+              About {exercise.durationSec}s · {exercise.steps.length} steps
+            </Txt>
           </View>
-          <Pressable onPress={swapStealth} style={styles.awkward}>
-            <Txt variant="small" color={colors.primaryDark}>
-              😬 Swap for something more discreet →
+
+          <View style={styles.footer}>
+            <Button title="Start 2-minute reset" onPress={begin} />
+            <Pressable onPress={swapStealth} style={styles.discreet} hitSlop={8}>
+              <Txt variant="small" color={colors.primaryDark}>
+                Need something discreet?
+              </Txt>
+            </Pressable>
+          </View>
+        </>
+      ) : (
+        <>
+          <View style={styles.stage}>
+            <View style={styles.timerWrap}>
+              <View style={styles.timerHalo} />
+              <CircleTimer
+                progress={progress}
+                secondsLeft={stepLeft}
+                emoji={exercise.icon}
+                running={running}
+              />
+            </View>
+            <Txt variant="h2" style={styles.stepLabel}>
+              {currentStep?.label}
             </Txt>
-          </Pressable>
-        </View>
+          </View>
+
+          <View style={styles.footer}>
+            <View style={styles.controls}>
+              <Button
+                title={running ? 'Pause' : 'Resume'}
+                variant="secondary"
+                onPress={togglePause}
+                style={{ flex: 1 }}
+              />
+              <Button title="I'm done" variant="ghost" onPress={finish} style={{ flex: 1 }} />
+            </View>
+            <Pressable onPress={swapStealth} style={styles.discreet} hitSlop={8}>
+              <Txt variant="small" color={colors.primaryDark}>
+                Need something discreet?
+              </Txt>
+            </Pressable>
+          </View>
+        </>
       )}
     </Screen>
   );
+}
+
+/** A short, friendly label for the top of the focus screen. */
+function resolveModeLabel(exercise: Exercise, mode?: string): string {
+  if (mode === 'meetingRecovery') return 'Meeting Recovery';
+  if (mode === 'deadlineSurvival') return 'Deadline Survival';
+  if (exercise.stealth) return 'Stealth Reset';
+  if (exercise.category === 'visual') return 'Eye Reset';
+  if (exercise.category === 'mental') return 'Mind Reset';
+  return 'Body Reset';
 }
 
 const styles = StyleSheet.create({
@@ -212,31 +240,84 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
   },
-  tags: { flexDirection: 'row', gap: spacing.sm },
+  edge: { width: 40, alignItems: 'flex-start' },
+  modePill: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  intro: {
+
+  stage: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.xl,
   },
-  bigEmoji: { fontSize: 100, marginBottom: spacing.lg },
-  startBtn: { marginTop: spacing.xl, alignSelf: 'stretch' },
-  awkward: { paddingVertical: spacing.md, marginTop: spacing.sm },
-  player: {
-    flex: 1,
+
+  // Pre-start soft orb (static layered shapes)
+  orb: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.xl,
+    backgroundColor: colors.primarySoft,
+  },
+  orbHalo: {
+    position: 'absolute',
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: colors.primarySoft,
+    opacity: 0.45,
+  },
+  orbInner: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+  },
+  orbEmoji: { fontSize: 72, lineHeight: 84 },
+
+  centerText: { textAlign: 'center' },
+  summary: {
+    textAlign: 'center',
+    marginTop: spacing.md,
+    lineHeight: 23,
+    maxWidth: 320,
+  },
+  meta: { marginTop: spacing.lg },
+
+  // Player
+  timerWrap: { alignItems: 'center', justifyContent: 'center' },
+  timerHalo: {
+    position: 'absolute',
+    width: 296,
+    height: 296,
+    borderRadius: 148,
+    backgroundColor: colors.primarySoft,
+    opacity: 0.4,
   },
   stepLabel: {
     textAlign: 'center',
-    marginTop: spacing.xl,
-    marginBottom: spacing.xl,
+    marginTop: spacing.xxl,
     minHeight: 60,
     lineHeight: 28,
+    maxWidth: 320,
   },
-  controls: { flexDirection: 'row', gap: spacing.md, alignSelf: 'stretch' },
+
+  footer: { paddingHorizontal: spacing.xl, paddingBottom: spacing.lg, gap: spacing.sm },
+  controls: { flexDirection: 'row', gap: spacing.md },
+  discreet: { alignItems: 'center', paddingVertical: spacing.md },
 });

@@ -28,9 +28,14 @@ export function RewardScreen() {
   return (
     <Screen>
       <View style={styles.body}>
-        <Animated.Text style={[styles.plant, { transform: [{ scale }] }]}>
-          {plantStage(gardenPoints)}
-        </Animated.Text>
+        <Animated.View style={[styles.plantWrap, { transform: [{ scale }] }]}>
+          <View style={styles.plantGlow} />
+          <View style={styles.plantGroup}>
+            <Text style={styles.plant}>{plantStage(gardenPoints)}</Text>
+            <View style={styles.potRim} />
+            <View style={styles.potBody} />
+          </View>
+        </Animated.View>
         <Txt variant="title" style={{ textAlign: 'center' }}>
           Nice reset 🌟
         </Txt>
@@ -95,9 +100,36 @@ function StatLine({ emoji, label, value }: { emoji: string; label: string; value
   );
 }
 
+const WOOD_DARK = '#B0865E';
+
 const styles = StyleSheet.create({
   body: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl },
-  plant: { fontSize: 110, marginBottom: spacing.lg },
+  plantWrap: { alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg },
+  plantGlow: {
+    position: 'absolute',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: colors.sun + '55',
+  },
+  plantGroup: { alignItems: 'center' },
+  plant: { fontSize: 84, marginBottom: -6 },
+  potRim: {
+    width: 70,
+    height: 16,
+    borderRadius: 5,
+    backgroundColor: WOOD_DARK,
+    marginBottom: -2,
+  },
+  potBody: {
+    width: 54,
+    height: 46,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+    backgroundColor: colors.clay,
+  },
   statsCard: { alignSelf: 'stretch', marginTop: spacing.xl },
   statLine: {
     flexDirection: 'row',

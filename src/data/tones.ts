@@ -102,8 +102,8 @@ const COPY: Record<NotificationTone, Partial<Record<Signal, string[]>>> = {
       'Consider a short movement break to support posture and focus.',
     ],
     eyeTimer: [
-      'A 20-second distance gaze can help reduce screen-related eye strain.',
-      'Time for a brief eye break to ease visual load.',
+      'A 20-second distance gaze can help give your eyes a break from the screen.',
+      'Time for a brief eye break to ease screen-tired eyes.',
     ],
     stress: ['A one-minute breathing reset may help you re-center before the next task.'],
     stiffNeck: ['A short shoulder release can ease tension from prolonged sitting.'],

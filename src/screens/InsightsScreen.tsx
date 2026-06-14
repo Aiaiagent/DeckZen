@@ -53,7 +53,7 @@ export function InsightsScreen() {
     <Screen scroll>
       <Txt variant="title">Your insights</Txt>
       <Txt variant="body" color={colors.textMuted} style={{ marginTop: spacing.xs }}>
-        Honest signals from your own breaks — no medical claims, just your habits.
+        A gentle read on your own break habits — just your check-ins and resets.
       </Txt>
 
       <View style={styles.row}>
@@ -100,15 +100,15 @@ export function InsightsScreen() {
         <Card style={styles.lockedCard}>
           <Text style={{ fontSize: 34 }}>🔒</Text>
           <Txt variant="h3" style={{ marginTop: spacing.sm }}>
-            Unlock Health Insights
+            Unlock your reset insights
           </Txt>
           <Txt
             variant="small"
             color={colors.textMuted}
             style={{ textAlign: 'center', marginTop: spacing.xs, lineHeight: 18 }}
           >
-            See your stress patterns, eye-strain windows, best reset times, and
-            weekly completion — plus export a report.
+            See when tension tends to build, your best times to reset, and how
+            your week is going — plus an exportable summary.
           </Txt>
           <Button
             title="See Premium"

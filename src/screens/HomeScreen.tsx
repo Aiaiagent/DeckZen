@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Pressable, Text } from 'react-native';
-import { Screen, Txt, Card, Button, Tag } from '../components/ui';
+import { Screen, Txt, Card, Button } from '../components/ui';
 import { colors, spacing, radius, font } from '../theme';
 import { DeskGarden } from '../components/DeskGarden';
 import { useStore } from '../store/useStore';
@@ -16,8 +16,8 @@ export function HomeScreen() {
   const hoursSince = useStore((s) => s.hoursSinceLastReset());
 
   const mood = deriveMood({ hoursSinceLastReset: hoursSince, resetsToday });
-
   const greeting = getGreeting();
+  const contextLine = getContextLine(mood, resetsToday);
 
   const quickReset = () => {
     const ex = recommend({
@@ -28,96 +28,82 @@ export function HomeScreen() {
     if (ex) go('reset', { exercise: ex });
   };
 
+  const startMode = (mode: 'meetingRecovery' | 'deadlineSurvival') => {
+    hapticTap();
+    const ex = recommend({
+      equipment: useStore.getState().equipment,
+      isPremium: useStore.getState().isPremium,
+      history: useStore.getState().resets,
+      mode,
+      stealthOnly: mode === 'deadlineSurvival',
+    });
+    if (ex) go('reset', { exercise: ex, mode });
+  };
+
   return (
-    <Screen scroll>
+    <Screen scroll contentStyle={styles.content}>
       <View style={styles.header}>
-        <View>
-          <Txt variant="small" color={colors.textMuted}>
-            {greeting}
-          </Txt>
-          <Txt variant="title">Your Desk Garden</Txt>
-        </View>
-        <View style={styles.stats}>
-          <Stat value={`${streak}`} label="day streak" emoji="🔥" />
-          <Stat value={`${gardenPoints}`} label="points" emoji="✨" />
-        </View>
+        <Txt variant="small" color={colors.textMuted}>
+          {greeting}
+        </Txt>
+        <Txt variant="title" style={styles.contextLine}>
+          {contextLine}
+        </Txt>
       </View>
 
       <DeskGarden points={gardenPoints} mood={mood} />
 
-      <Card style={styles.checkinCard}>
-        <Txt variant="h3">How are you right now?</Txt>
-        <Txt variant="small" color={colors.textMuted} style={{ marginTop: 2 }}>
-          One tap. We'll match you with a 2-minute reset.
-        </Txt>
+      <View style={styles.chips}>
+        <ProgressChip emoji="✅" value={`${resetsToday}`} label="today" />
+        <ProgressChip emoji="🔥" value={`${streak}`} label="streak" />
+        <ProgressChip emoji="✨" value={`${gardenPoints}`} label="points" />
+      </View>
+
+      <View style={styles.actions}>
+        <Button title="Reset 2 minutes" onPress={quickReset} />
         <Button
-          title="Check in"
+          title="Check in first"
+          variant="secondary"
           onPress={() => go('checkin')}
-          style={{ marginTop: spacing.md }}
+          style={styles.secondaryBtn}
         />
-        <Pressable onPress={quickReset} style={styles.quick}>
-          <Txt variant="small" color={colors.primaryDark}>
-            or surprise me with a quick reset →
-          </Txt>
-        </Pressable>
-      </Card>
+      </View>
 
-      <Txt variant="h3" style={styles.sectionTitle}>
-        Focus modes
-      </Txt>
-
-      <ModeCard
-        emoji="🔁"
-        title="Meeting Recovery"
-        desc="Just finished a call? Reset your head before the next thing."
-        premium={!isPremium}
-        onPress={() => {
-          hapticTap();
-          if (!isPremium) return go('paywall', { paywallSource: 'meetingRecovery' });
-          const ex = recommend({
-            equipment: useStore.getState().equipment,
-            isPremium: true,
-            history: useStore.getState().resets,
-            mode: 'meetingRecovery',
-          });
-          if (ex) go('reset', { exercise: ex, mode: 'meetingRecovery' });
-        }}
-      />
-
-      <ModeCard
-        emoji="🔥"
-        title="Deadline Survival"
-        desc="Crunch time. A quiet 60-second reset so you don't burn out."
-        premium={!isPremium}
-        onPress={() => {
-          hapticTap();
-          if (!isPremium) return go('paywall', { paywallSource: 'deadlineSurvival' });
-          const ex = recommend({
-            equipment: useStore.getState().equipment,
-            isPremium: true,
-            history: useStore.getState().resets,
-            mode: 'deadlineSurvival',
-            stealthOnly: true,
-          });
-          if (ex) go('reset', { exercise: ex, mode: 'deadlineSurvival' });
-        }}
-      />
+      {isPremium && (
+        <View style={styles.modes}>
+          <ModeChip
+            emoji="🔁"
+            label="Meeting Recovery"
+            onPress={() => startMode('meetingRecovery')}
+          />
+          <ModeChip
+            emoji="🔥"
+            label="Deadline Survival"
+            onPress={() => startMode('deadlineSurvival')}
+          />
+        </View>
+      )}
 
       {!isPremium && (
         <Pressable
-          onPress={() => go('paywall', { paywallSource: 'home' })}
+          onPress={() => {
+            hapticTap();
+            go('paywall', { paywallSource: 'home' });
+          }}
           style={styles.upsell}
         >
-          <Text style={{ fontSize: 26 }}>🌟</Text>
+          <View style={styles.upsellGlow} />
+          <Text style={styles.upsellEmoji}>🌿</Text>
           <View style={{ flex: 1 }}>
             <Txt variant="bodyStrong" color={colors.primaryDark}>
-              Unlock DeskZen Premium
+              Try Premium
             </Txt>
-            <Txt variant="small" color={colors.textMuted}>
-              AI-matched resets, all voices, weekly insights & more.
+            <Txt variant="small" color={colors.textMuted} style={styles.upsellDesc}>
+              Unlock adaptive resets for meetings, deadlines, and low-energy
+              afternoons.
             </Txt>
           </View>
-          <Txt variant="h3" color={colors.primaryDark}>
+          <Txt variant="h2" color={colors.primaryDark}>
             ›
           </Txt>
         </Pressable>
@@ -128,17 +114,35 @@ export function HomeScreen() {
 
 function getGreeting(): string {
   const h = new Date().getHours();
-  if (h < 12) return 'Good morning ☀️';
-  if (h < 18) return 'Good afternoon 🌤️';
-  return 'Good evening 🌙';
+  if (h < 12) return 'Good morning';
+  if (h < 18) return 'Good afternoon';
+  return 'Good evening';
 }
 
-function Stat({ value, label, emoji }: { value: string; label: string; emoji: string }) {
+function getContextLine(mood: string, resetsToday: number): string {
+  if (mood === 'wilting')
+    return "It's been a while. Your body could use a tiny reset.";
+  if (mood === 'stressed')
+    return "You've been focused for a while. Time to loosen up.";
+  if (mood === 'thriving') return "You're on a roll today. Keep it gentle.";
+  if (mood === 'recovering') return 'Nicely reset. Your desk is brightening up.';
+  if (resetsToday === 0) return 'A calm moment to start. Ready for a reset?';
+  return 'A good time for a tiny reset.';
+}
+
+function ProgressChip({
+  emoji,
+  value,
+  label,
+}: {
+  emoji: string;
+  value: string;
+  label: string;
+}) {
   return (
-    <View style={styles.stat}>
-      <Txt variant="h3">
-        {emoji} {value}
-      </Txt>
+    <View style={styles.chip}>
+      <Text style={styles.chipEmoji}>{emoji}</Text>
+      <Txt variant="bodyStrong">{value}</Txt>
       <Txt variant="tiny" color={colors.textFaint}>
         {label.toUpperCase()}
       </Txt>
@@ -146,57 +150,71 @@ function Stat({ value, label, emoji }: { value: string; label: string; emoji: st
   );
 }
 
-function ModeCard({
+function ModeChip({
   emoji,
-  title,
-  desc,
-  premium,
+  label,
   onPress,
 }: {
   emoji: string;
-  title: string;
-  desc: string;
-  premium: boolean;
+  label: string;
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={styles.mode}>
-      <Text style={{ fontSize: 30 }}>{emoji}</Text>
-      <View style={{ flex: 1 }}>
-        <View style={styles.modeTitleRow}>
-          <Txt variant="bodyStrong">{title}</Txt>
-          {premium && <Tag text="Premium" color={colors.sun} />}
-        </View>
-        <Txt variant="small" color={colors.textMuted}>
-          {desc}
-        </Txt>
-      </View>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.mode,
+        { transform: [{ scale: pressed ? 0.98 : 1 }] },
+      ]}
+    >
+      <Text style={styles.modeEmoji}>{emoji}</Text>
+      <Txt variant="small" color={colors.primaryDark} style={styles.modeLabel}>
+        {label}
+      </Txt>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
+  content: { paddingTop: spacing.sm },
+  header: { marginBottom: spacing.lg, gap: 2 },
+  contextLine: { marginTop: 2, lineHeight: 33 },
+  chips: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: spacing.lg,
+    gap: spacing.sm,
+    marginTop: spacing.lg,
   },
-  stats: { flexDirection: 'row', gap: spacing.md },
-  stat: { alignItems: 'flex-end' },
-  checkinCard: { marginTop: spacing.lg },
-  quick: { alignItems: 'center', paddingVertical: spacing.md },
-  sectionTitle: { marginTop: spacing.xl, marginBottom: spacing.sm },
-  mode: {
+  chip: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    justifyContent: 'center',
+    gap: 5,
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
+    borderRadius: radius.pill,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
   },
-  modeTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  chipEmoji: { fontSize: 15 },
+  actions: { marginTop: spacing.xl, gap: spacing.md },
+  secondaryBtn: { marginTop: 0 },
+  modes: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
+  mode: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  modeEmoji: { fontSize: 18 },
+  modeLabel: { flexShrink: 1 },
   upsell: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -204,6 +222,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySoft,
     borderRadius: radius.lg,
     padding: spacing.lg,
-    marginTop: spacing.sm,
+    marginTop: spacing.xl,
+    overflow: 'hidden',
   },
+  upsellGlow: {
+    position: 'absolute',
+    top: -30,
+    right: -20,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: colors.sun + '33',
+  },
+  upsellEmoji: { fontSize: 28 },
+  upsellDesc: { marginTop: 2, lineHeight: 19 },
 });

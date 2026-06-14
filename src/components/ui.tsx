@@ -54,6 +54,7 @@ export function Button({
     ghost: { bg: 'transparent', fg: colors.textMuted },
     danger: { bg: colors.danger, fg: '#fff' },
   }[variant];
+  const lifts = variant === 'primary' || variant === 'danger';
 
   return (
     <Pressable
@@ -65,7 +66,13 @@ export function Button({
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.btn,
-        { backgroundColor: palette.bg, opacity: isDisabled ? 0.55 : pressed ? 0.9 : 1 },
+        lifts && shadow.button,
+        {
+          backgroundColor: palette.bg,
+          opacity: isDisabled ? 0.5 : 1,
+          transform: [{ scale: pressed && !isDisabled ? 0.98 : 1 }],
+        },
+        variant === 'secondary' && styles.btnSecondary,
         variant === 'ghost' && styles.btnGhost,
         style as object,
       ]}
@@ -73,7 +80,7 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={palette.fg} />
       ) : (
-        <Text style={[font.bodyStrong, { color: palette.fg }]}>{title}</Text>
+        <Text style={[font.bodyStrong, styles.btnLabel, { color: palette.fg }]}>{title}</Text>
       )}
     </Pressable>
   );
@@ -94,12 +101,16 @@ export function Pill({
         hapticTap();
         onPress?.();
       }}
-      style={[styles.pill, active && styles.pillActive]}
+      style={({ pressed }) => [
+        styles.pill,
+        active && styles.pillActive,
+        { transform: [{ scale: pressed ? 0.97 : 1 }] },
+      ]}
     >
       <Text
         style={[
           font.small,
-          { color: active ? colors.onPrimary : colors.textMuted },
+          { color: active ? colors.onPrimary : colors.textMuted, fontWeight: active ? '700' : '500' },
         ]}
       >
         {label}
@@ -155,23 +166,35 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
     ...shadow.card,
   },
   btn: {
-    height: 54,
+    height: 56,
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.xl,
   },
+  btnSecondary: {
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
   btnGhost: { height: 44 },
+  btnLabel: { letterSpacing: 0.2 },
   pill: {
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
     borderRadius: radius.pill,
     backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
   },
-  pillActive: { backgroundColor: colors.primary },
+  pillActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
   tag: {
     alignSelf: 'flex-start',
     paddingHorizontal: spacing.sm,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Pressable, Text } from 'react-native';
 import { Screen, Txt } from '../components/ui';
-import { colors, spacing, radius } from '../theme';
+import { colors, spacing, radius, shadow } from '../theme';
 import { CHECK_INS } from '../data/checkins';
 import { useStore } from '../store/useStore';
 import { useNav } from '../navigation/nav';
@@ -45,16 +45,32 @@ export function CheckInScreen() {
       </View>
 
       <View style={styles.grid}>
-        {CHECK_INS.map((c) => (
-          <Pressable key={c.state} style={styles.tile} onPress={() => pick(c.state)}>
-            <Text style={styles.emoji}>{c.emoji}</Text>
-            <Txt variant="bodyStrong">{c.label}</Txt>
-            <Txt variant="small" color={colors.textMuted} style={styles.caption}>
-              {c.caption}
-            </Txt>
-          </Pressable>
-        ))}
-        <View style={[styles.tile, styles.tileGhost]} />
+        {CHECK_INS.map((c, i) => {
+          const wide = i === CHECK_INS.length - 1 && CHECK_INS.length % 2 === 1;
+          return (
+            <Pressable
+              key={c.state}
+              onPress={() => pick(c.state)}
+              style={({ pressed }) => [
+                styles.tile,
+                wide && styles.tileWide,
+                { transform: [{ scale: pressed ? 0.98 : 1 }] },
+              ]}
+            >
+              <Text style={[styles.emoji, wide && styles.emojiWide]}>{c.emoji}</Text>
+              <View style={wide ? styles.wideText : undefined}>
+                <Txt variant="bodyStrong">{c.label}</Txt>
+                <Txt
+                  variant="small"
+                  color={colors.textMuted}
+                  style={wide ? styles.captionWide : styles.caption}
+                >
+                  {c.caption}
+                </Txt>
+              </View>
+            </Pressable>
+          );
+        })}
       </View>
     </Screen>
   );
@@ -77,8 +93,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     alignItems: 'center',
     gap: 4,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    ...shadow.card,
   },
-  tileGhost: { backgroundColor: 'transparent' },
+  tileWide: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.lg,
+    paddingVertical: spacing.lg,
+  },
+  wideText: { flex: 1 },
   emoji: { fontSize: 46, marginBottom: spacing.sm },
+  emojiWide: { fontSize: 40, marginBottom: 0 },
   caption: { textAlign: 'center' },
+  captionWide: { marginTop: 2 },
 });
