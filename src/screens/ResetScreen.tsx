@@ -8,6 +8,7 @@ import { useNav } from '../navigation/nav';
 import { Exercise } from '../types';
 import { rankExercises } from '../data/engine';
 import { hapticStep, hapticSuccess, hapticTap } from '../services/haptics';
+import { useT, TKey } from '../i18n';
 
 /** Given total elapsed seconds, find the active step index + seconds left in it. */
 function locate(exercise: Exercise, elapsed: number): { stepIdx: number; stepLeft: number } {
@@ -23,6 +24,7 @@ function locate(exercise: Exercise, elapsed: number): { stepIdx: number; stepLef
 
 export function ResetScreen() {
   const { params, go, back } = useNav();
+  const t = useT();
   const logReset = useStore((s) => s.logReset);
 
   const [exercise, setExercise] = useState<Exercise | undefined>(params.exercise);
@@ -128,8 +130,8 @@ export function ResetScreen() {
     return (
       <Screen>
         <View style={styles.center}>
-          <Txt variant="h3">No reset available.</Txt>
-          <Button title="Go back" onPress={back} style={{ marginTop: spacing.lg }} />
+          <Txt variant="h3">{t('reset.empty')}</Txt>
+          <Button title={t('reset.goBack')} onPress={back} style={{ marginTop: spacing.lg }} />
         </View>
       </Screen>
     );
@@ -149,7 +151,7 @@ export function ResetScreen() {
         </Pressable>
         <View style={styles.modePill}>
           <Txt variant="tiny" color={colors.primaryDark}>
-            {modeLabel.toUpperCase()}
+            {t(modeLabel).toUpperCase()}
           </Txt>
         </View>
         <View style={styles.edge} />
@@ -173,15 +175,15 @@ export function ResetScreen() {
               {exercise.summary}
             </Txt>
             <Txt variant="small" color={colors.textFaint} style={styles.meta}>
-              About {exercise.durationSec}s · {exercise.steps.length} steps
+              {t('reset.meta', { seconds: exercise.durationSec, steps: exercise.steps.length })}
             </Txt>
           </View>
 
           <View style={styles.footer}>
-            <Button title="Start 2-minute reset" onPress={begin} />
+            <Button title={t('reset.start')} onPress={begin} />
             <Pressable onPress={swapStealth} style={styles.discreet} hitSlop={8}>
               <Txt variant="small" color={colors.primaryDark}>
-                Need something discreet?
+                {t('reset.discreet')}
               </Txt>
             </Pressable>
           </View>
@@ -206,16 +208,16 @@ export function ResetScreen() {
           <View style={styles.footer}>
             <View style={styles.controls}>
               <Button
-                title={running ? 'Pause' : 'Resume'}
+                title={running ? t('reset.pause') : t('reset.resume')}
                 variant="secondary"
                 onPress={togglePause}
                 style={{ flex: 1 }}
               />
-              <Button title="I'm done" variant="ghost" onPress={finish} style={{ flex: 1 }} />
+              <Button title={t('reset.done')} variant="ghost" onPress={finish} style={{ flex: 1 }} />
             </View>
             <Pressable onPress={swapStealth} style={styles.discreet} hitSlop={8}>
               <Txt variant="small" color={colors.primaryDark}>
-                Need something discreet?
+                {t('reset.discreet')}
               </Txt>
             </Pressable>
           </View>
@@ -226,13 +228,13 @@ export function ResetScreen() {
 }
 
 /** A short, friendly label for the top of the focus screen. */
-function resolveModeLabel(exercise: Exercise, mode?: string): string {
-  if (mode === 'meetingRecovery') return 'Meeting Recovery';
-  if (mode === 'deadlineSurvival') return 'Deadline Survival';
-  if (exercise.stealth) return 'Stealth Reset';
-  if (exercise.category === 'visual') return 'Eye Reset';
-  if (exercise.category === 'mental') return 'Mind Reset';
-  return 'Body Reset';
+function resolveModeLabel(exercise: Exercise, mode?: string): TKey {
+  if (mode === 'meetingRecovery') return 'reset.mode.meeting';
+  if (mode === 'deadlineSurvival') return 'reset.mode.deadline';
+  if (exercise.stealth) return 'reset.mode.stealth';
+  if (exercise.category === 'visual') return 'reset.mode.eye';
+  if (exercise.category === 'mental') return 'reset.mode.mind';
+  return 'reset.mode.body';
 }
 
 const styles = StyleSheet.create({

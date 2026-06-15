@@ -6,9 +6,11 @@ import { useStore } from '../store/useStore';
 import { useNav } from '../navigation/nav';
 import { plantStage } from '../data/garden';
 import { CHECK_IN_BY_STATE } from '../data/checkins';
+import { useT, TKey } from '../i18n';
 
 export function RewardScreen() {
   const { params, go } = useNav();
+  const t = useT();
   const { gardenPoints, streak } = useStore();
   const resetsToday = useStore((s) => s.resetsToday());
 
@@ -21,9 +23,7 @@ export function RewardScreen() {
   const gained = params.gained ?? 10;
   const stateMeta = params.stateBefore ? CHECK_IN_BY_STATE[params.stateBefore] : undefined;
 
-  const careLine = stateMeta
-    ? `You just looked after ${zoneWord(stateMeta.zones[0])}.`
-    : 'You just gave yourself a real break.';
+  const careLine = t(stateMeta ? careLineKey(stateMeta.zones[0]) : 'reward.careLine.default');
 
   return (
     <Screen>
@@ -37,53 +37,53 @@ export function RewardScreen() {
           </View>
         </Animated.View>
         <Txt variant="title" style={{ textAlign: 'center' }}>
-          Nice reset 🌟
+          {t('reward.title')}
         </Txt>
         <Txt
           variant="body"
           color={colors.textMuted}
           style={{ textAlign: 'center', marginTop: spacing.sm }}
         >
-          {careLine} Your desk garden just brightened up.
+          {careLine} {t('reward.brightened')}
         </Txt>
 
         <Card style={styles.statsCard}>
-          <StatLine emoji="✨" label="Points earned" value={`+${gained}`} />
+          <StatLine emoji="✨" label={t('reward.pointsEarned')} value={`+${gained}`} />
           <View style={styles.divider} />
-          <StatLine emoji="🔥" label="Day streak" value={`${streak}`} />
+          <StatLine emoji="🔥" label={t('reward.dayStreak')} value={`${streak}`} />
           <View style={styles.divider} />
-          <StatLine emoji="✅" label="Resets today" value={`${resetsToday}`} />
+          <StatLine emoji="✅" label={t('reward.resetsToday')} value={`${resetsToday}`} />
         </Card>
 
         {resetsToday >= 3 && (
           <View style={styles.badge}>
             <Text style={{ fontSize: 20 }}>🏆</Text>
             <Txt variant="small" color={colors.primaryDark}>
-              3 resets today — your garden is thriving!
+              {t('reward.badge')}
             </Txt>
           </View>
         )}
       </View>
 
       <View style={styles.footer}>
-        <Button title="Back to my desk" onPress={() => go('home')} />
+        <Button title={t('reward.back')} onPress={() => go('home')} />
       </View>
     </Screen>
   );
 }
 
-function zoneWord(zone: string): string {
+function careLineKey(zone: string): TKey {
   switch (zone) {
     case 'eyes':
-      return 'your eyes';
+      return 'reward.careLine.eyes';
     case 'neck':
-      return 'your neck and shoulders';
+      return 'reward.careLine.neck';
     case 'back':
-      return 'your back';
+      return 'reward.careLine.back';
     case 'wrists':
-      return 'your wrists';
+      return 'reward.careLine.wrists';
     default:
-      return 'your mind';
+      return 'reward.careLine.mind';
   }
 }
 

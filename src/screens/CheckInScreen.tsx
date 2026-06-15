@@ -8,10 +8,12 @@ import { useNav } from '../navigation/nav';
 import { recommend } from '../data/engine';
 import { CheckInState } from '../types';
 import { hapticSelect } from '../services/haptics';
+import { useT, TKey } from '../i18n';
 
 export function CheckInScreen() {
   const go = useNav((s) => s.go);
   const back = useNav((s) => s.back);
+  const t = useT();
   const logCheckIn = useStore((s) => s.logCheckIn);
 
   const pick = (state: CheckInState) => {
@@ -38,9 +40,9 @@ export function CheckInScreen() {
       </View>
 
       <View style={styles.head}>
-        <Txt variant="title">What are you feeling?</Txt>
+        <Txt variant="title">{t('checkin.title')}</Txt>
         <Txt variant="body" color={colors.textMuted} style={{ marginTop: spacing.sm }}>
-          Tap one. That's the whole check-in.
+          {t('checkin.subtitle')}
         </Txt>
       </View>
 
@@ -59,13 +61,13 @@ export function CheckInScreen() {
             >
               <Text style={[styles.emoji, wide && styles.emojiWide]}>{c.emoji}</Text>
               <View style={wide ? styles.wideText : undefined}>
-                <Txt variant="bodyStrong">{c.label}</Txt>
+                <Txt variant="bodyStrong">{t(`checkin.label.${c.state}` as TKey)}</Txt>
                 <Txt
                   variant="small"
                   color={colors.textMuted}
                   style={wide ? styles.captionWide : styles.caption}
                 >
-                  {c.caption}
+                  {t(`checkin.caption.${c.state}` as TKey)}
                 </Txt>
               </View>
             </Pressable>

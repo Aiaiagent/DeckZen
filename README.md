@@ -2,6 +2,12 @@
 
 **Reset your workday in 2 minutes.**
 
+- **App name:** DeskZen
+- **Store title:** DeskZen: Workday Stress Reset
+- **Tagline:** Reset your workday in 2 minutes.
+- **Subtitle:** 2-minute breaks for office stress
+- **Short description:** Tiny adaptive breaks for stressful meetings, tired eyes, stiff shoulders, and deadline mode.
+
 DeskZen is a personalized micro-break assistant for office workers. Instead of
 10-minute meditations or yoga between desks, it serves 30–120 second resets based
 on how you feel right now — stressed, sleepy, eye-strained, stiff-necked, or in
@@ -23,7 +29,7 @@ Check-in (5s)  →  Smart Nudge  →  2-min Reset  →  Reward (garden grows)  �
   relevant *and* completed, using state, equipment, premium access, and your
   break history (`src/data/engine.ts`).
 - **2-min Reset player** — big breathing focal point, circular timer, one-line
-  instructions, haptics, and a **"Too awkward at the office? Swap it"** button
+  instructions, haptics, and a **"Need something discreet?"** button
   that switches to a stealth (desk-discreet) exercise.
 - **Desk Garden** — a plant avatar that thrives or wilts; comedic "body residents"
   (spine 🦴, brain 🧠) pop in when you've neglected a break.
@@ -36,7 +42,7 @@ Check-in (5s)  →  Smart Nudge  →  2-min Reset  →  Reward (garden grows)  �
 | 1 garden, core resets | AI-matched resets (full library) |
 | 2 nudge voices (Sen the Plant, Minimal) | All voices (Gen Z Roast, Corporate, Calm Coach) |
 | 7-day streak | Meeting Recovery + Deadline Survival modes |
-| Basic stats | Weekly Health Insights + patterns |
+| Basic stats | Weekly insights + patterns |
 | | Equipment-based routines |
 
 Pricing (in `src/services/purchases.ts`): **$4.99/mo** or **$29.99/yr** (highlighted).

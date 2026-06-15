@@ -6,27 +6,29 @@ import { useStore } from '../store/useStore';
 import { useNav } from '../navigation/nav';
 import { PLANS, purchase } from '../services/purchases';
 import { hapticSelect, hapticSuccess } from '../services/haptics';
+import { useT, TKey } from '../i18n';
 
-const GROUPS = [
+const GROUPS: { emoji: string; titleKey: TKey; itemKeys: TKey[] }[] = [
   {
     emoji: '🔁',
-    title: 'Workday resets',
-    items: ['Meeting Recovery', 'Deadline Survival', 'Low-energy afternoon resets'],
+    titleKey: 'paywall.group.workday.title',
+    itemKeys: ['paywall.group.workday.item1', 'paywall.group.workday.item2', 'paywall.group.workday.item3'],
   },
   {
     emoji: '🧘',
-    title: 'Body care',
-    items: ['Eyes, neck, shoulders, back & wrists', 'Stealth office exercises', 'Equipment-based routines'],
+    titleKey: 'paywall.group.body.title',
+    itemKeys: ['paywall.group.body.item1', 'paywall.group.body.item2', 'paywall.group.body.item3'],
   },
   {
     emoji: '🌿',
-    title: 'Habit loop',
-    items: ['Personalized nudge voices', 'Weekly insights', 'Premium Desk Garden growth'],
+    titleKey: 'paywall.group.habit.title',
+    itemKeys: ['paywall.group.habit.item1', 'paywall.group.habit.item2', 'paywall.group.habit.item3'],
   },
 ];
 
 export function PaywallScreen() {
   const { back } = useNav();
+  const t = useT();
   const setPremium = useStore((s) => s.setPremium);
   const [selected, setSelected] = useState(PLANS.find((p) => p.highlight)?.id ?? PLANS[0].id);
   const [busy, setBusy] = useState(false);
@@ -38,11 +40,13 @@ export function PaywallScreen() {
     if (res.success && res.isPremium) {
       setPremium(true);
       hapticSuccess();
-      Alert.alert('Welcome to Premium 🌟', 'Everything is unlocked. Enjoy your resets!', [
-        { text: 'Great', onPress: back },
-      ]);
+      Alert.alert(
+        t('paywall.alert.success.title'),
+        t('paywall.alert.success.body'),
+        [{ text: t('paywall.alert.success.ok'), onPress: back }],
+      );
     } else {
-      Alert.alert('Purchase failed', res.error ?? 'Please try again.');
+      Alert.alert(t('paywall.alert.fail.title'), res.error ?? t('paywall.alert.fail.body'));
     }
   };
 
@@ -58,11 +62,10 @@ export function PaywallScreen() {
 
       {/* Hero */}
       <Txt variant="title" style={styles.heroTitle}>
-        Make every work break feel made for you.
+        {t('paywall.hero.title')}
       </Txt>
       <Txt variant="body" color={colors.textMuted} style={styles.heroSub}>
-        Adaptive 30–120 second resets for stressful meetings, tired afternoons,
-        stiff shoulders, and deadline mode.
+        {t('paywall.hero.sub')}
       </Txt>
 
       {/* Premium glowing plant visual */}
@@ -76,7 +79,7 @@ export function PaywallScreen() {
         </View>
         <View style={styles.premiumBadge}>
           <Txt variant="tiny" color={colors.primaryDark}>
-            DESKZEN PREMIUM
+            {t('paywall.badge')}
           </Txt>
         </View>
       </View>
@@ -84,17 +87,17 @@ export function PaywallScreen() {
       {/* Benefit groups */}
       <View style={styles.groups}>
         {GROUPS.map((g) => (
-          <Card key={g.title} style={styles.group}>
+          <Card key={g.titleKey} style={styles.group}>
             <View style={styles.groupHead}>
               <Text style={styles.groupEmoji}>{g.emoji}</Text>
-              <Txt variant="h3">{g.title}</Txt>
+              <Txt variant="h3">{t(g.titleKey)}</Txt>
             </View>
             <View style={styles.groupItems}>
-              {g.items.map((item) => (
-                <View key={item} style={styles.groupItem}>
+              {g.itemKeys.map((itemKey) => (
+                <View key={itemKey} style={styles.groupItem}>
                   <Text style={styles.check}>✓</Text>
                   <Txt variant="small" color={colors.textMuted} style={{ flex: 1 }}>
-                    {item}
+                    {t(itemKey)}
                   </Txt>
                 </View>
               ))}
@@ -151,19 +154,17 @@ export function PaywallScreen() {
 
       {/* CTA */}
       <Button
-        title={busy ? 'Processing…' : 'Start Premium'}
+        title={busy ? t('paywall.cta.busy') : t('paywall.cta.idle')}
         loading={busy}
         onPress={buy}
         style={{ marginTop: spacing.lg }}
       />
       <Txt variant="small" color={colors.textMuted} style={styles.cancel}>
-        Cancel anytime.
+        {t('paywall.cancelNote')}
       </Txt>
 
       <Txt variant="tiny" color={colors.textFaint} style={styles.legal}>
-        Subscriptions renew automatically until cancelled. Manage or cancel anytime
-        in your App Store or Google Play account settings. Demo build: purchases are
-        simulated and unlock Premium locally.
+        {t('paywall.legal')}
       </Txt>
     </Screen>
   );

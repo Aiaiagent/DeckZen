@@ -58,6 +58,9 @@ export type Equipment =
 /** Work rhythm influences nudge timing. */
 export type WorkRhythm = 'nineToSix' | 'nightShift' | 'freelance' | 'hybrid';
 
+/** UI languages supported by the app (interface chrome only). */
+export type Language = 'en' | 'vi' | 'ja' | 'ko' | 'th' | 'es' | 'de' | 'fr';
+
 /** Desk Garden overall mood, derived from recent activity. */
 export type GardenMood =
   | 'thriving'

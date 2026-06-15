@@ -4,11 +4,12 @@ import { Screen, Txt, Card, Button } from '../components/ui';
 import { colors, spacing, radius, font } from '../theme';
 import { useStore } from '../store/useStore';
 import { useNav } from '../navigation/nav';
-import { CHECK_IN_BY_STATE } from '../data/checkins';
 import { CheckInState } from '../types';
+import { useT, TKey } from '../i18n';
 
 export function InsightsScreen() {
   const go = useNav((s) => s.go);
+  const t = useT();
   const { resets, checkIns, isPremium, gardenPoints, streak } = useStore();
 
   const stats = useMemo(() => {
@@ -47,26 +48,26 @@ export function InsightsScreen() {
   }, [resets, checkIns]);
 
   const fmtHour = (h: number | null) =>
-    h === null ? '—' : `${((h + 11) % 12) + 1}${h < 12 ? 'am' : 'pm'}`;
+    h === null ? '—' : `${((h + 11) % 12) + 1}${h < 12 ? t('insights.am') : t('insights.pm')}`;
 
   return (
     <Screen scroll>
-      <Txt variant="title">Your insights</Txt>
+      <Txt variant="title">{t('insights.title')}</Txt>
       <Txt variant="body" color={colors.textMuted} style={{ marginTop: spacing.xs }}>
-        A gentle read on your own break habits — just your check-ins and resets.
+        {t('insights.subtitle')}
       </Txt>
 
       <View style={styles.row}>
-        <MetricCard emoji="✅" value={`${stats.totalResets}`} label="Total resets" />
-        <MetricCard emoji="⏱️" value={`${stats.totalMinutes}m`} label="Break minutes" />
+        <MetricCard emoji="✅" value={`${stats.totalResets}`} label={t('insights.metric.totalResets')} />
+        <MetricCard emoji="⏱️" value={t('insights.minutesSuffix', { minutes: stats.totalMinutes })} label={t('insights.metric.breakMinutes')} />
       </View>
       <View style={styles.row}>
-        <MetricCard emoji="🔥" value={`${streak}`} label="Day streak" />
-        <MetricCard emoji="✨" value={`${gardenPoints}`} label="Garden points" />
+        <MetricCard emoji="🔥" value={`${streak}`} label={t('insights.metric.dayStreak')} />
+        <MetricCard emoji="✨" value={`${gardenPoints}`} label={t('insights.metric.gardenPoints')} />
       </View>
 
       <Txt variant="h3" style={styles.section}>
-        Patterns
+        {t('insights.patterns')}
       </Txt>
 
       {isPremium ? (
@@ -75,43 +76,42 @@ export function InsightsScreen() {
             emoji="🎯"
             text={
               stats.topState
-                ? `You check in as "${CHECK_IN_BY_STATE[stats.topState].label}" most often.`
-                : 'Check in a few times to reveal your most common state.'
+                ? t('insights.pattern.topState', { label: t(checkinLabelKey(stats.topState)) })
+                : t('insights.pattern.topStateEmpty')
             }
           />
           <PatternLine
             emoji="🕒"
             text={
               stats.bestHour !== null
-                ? `You complete the most resets around ${fmtHour(stats.bestHour)}.`
-                : 'Your best reset time will appear as you build a habit.'
+                ? t('insights.pattern.bestHour', { hour: fmtHour(stats.bestHour) })
+                : t('insights.pattern.bestHourEmpty')
             }
           />
           <PatternLine
             emoji="📊"
-            text={`This week you finished ${stats.rate}% of the resets you started.`}
+            text={t('insights.pattern.rate', { rate: stats.rate })}
           />
           <PatternLine
             emoji="🌿"
-            text="Resets you finish most often get recommended more — that's the engine learning you."
+            text={t('insights.pattern.engine')}
           />
         </Card>
       ) : (
         <Card style={styles.lockedCard}>
           <Text style={{ fontSize: 34 }}>🔒</Text>
           <Txt variant="h3" style={{ marginTop: spacing.sm }}>
-            Unlock your reset insights
+            {t('insights.locked.title')}
           </Txt>
           <Txt
             variant="small"
             color={colors.textMuted}
             style={{ textAlign: 'center', marginTop: spacing.xs, lineHeight: 18 }}
           >
-            See when tension tends to build, your best times to reset, and how
-            your week is going — plus an exportable summary.
+            {t('insights.locked.body')}
           </Txt>
           <Button
-            title="See Premium"
+            title={t('insights.locked.cta')}
             onPress={() => go('paywall', { paywallSource: 'insights' })}
             style={{ marginTop: spacing.lg, alignSelf: 'stretch' }}
           />
@@ -119,11 +119,14 @@ export function InsightsScreen() {
       )}
 
       <Txt variant="tiny" color={colors.textFaint} style={styles.disclaimer}>
-        Insights are based on your self-reported check-ins and completed breaks.
-        DeskZen does not diagnose or treat any condition.
+        {t('insights.disclaimer')}
       </Txt>
     </Screen>
   );
+}
+
+function checkinLabelKey(state: CheckInState): TKey {
+  return `checkin.label.${state}` as TKey;
 }
 
 function MetricCard({ emoji, value, label }: { emoji: string; value: string; label: string }) {

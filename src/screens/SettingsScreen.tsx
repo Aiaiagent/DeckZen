@@ -5,27 +5,47 @@ import { colors, spacing, radius, font } from '../theme';
 import { useStore } from '../store/useStore';
 import { useNav } from '../navigation/nav';
 import { TONES } from '../data/tones';
-import { NotificationTone, Equipment, WorkRhythm } from '../types';
+import { NotificationTone, Equipment, WorkRhythm, Language } from '../types';
 import { hapticSelect } from '../services/haptics';
 import { rescheduleNudges, sendDemoNudge, isExpoGo } from '../services/notifications';
 import { restore } from '../services/purchases';
+import { useT, TKey } from '../i18n';
 
-const EQUIPMENT: { id: Equipment; label: string }[] = [
-  { id: 'stressBall', label: 'Stress ball' },
-  { id: 'massageRoller', label: 'Roller' },
-  { id: 'ergoChair', label: 'Ergo chair' },
-  { id: 'standingDesk', label: 'Standing desk' },
+const EQUIPMENT: { id: Equipment; labelKey: TKey }[] = [
+  { id: 'stressBall', labelKey: 'equipment.stressBall' },
+  { id: 'massageRoller', labelKey: 'equipment.massageRoller' },
+  { id: 'ergoChair', labelKey: 'equipment.ergoChair' },
+  { id: 'standingDesk', labelKey: 'equipment.standingDesk' },
 ];
 
-const RHYTHMS: { id: WorkRhythm; label: string }[] = [
-  { id: 'nineToSix', label: '9–6' },
-  { id: 'hybrid', label: 'Hybrid' },
-  { id: 'freelance', label: 'Freelance' },
-  { id: 'nightShift', label: 'Night' },
+const RHYTHMS: { id: WorkRhythm; labelKey: TKey }[] = [
+  { id: 'nineToSix', labelKey: 'rhythm.nineToSix' },
+  { id: 'hybrid', labelKey: 'rhythm.hybrid' },
+  { id: 'freelance', labelKey: 'rhythm.freelance' },
+  { id: 'nightShift', labelKey: 'rhythm.nightShift' },
 ];
+
+const LANGUAGES: { id: Language; label: string }[] = [
+  { id: 'en', label: 'English' },
+  { id: 'vi', label: 'Tiếng Việt' },
+  { id: 'ja', label: '日本語' },
+  { id: 'ko', label: '한국어' },
+  { id: 'th', label: 'ไทย' },
+  { id: 'es', label: 'Español' },
+  { id: 'de', label: 'Deutsch' },
+  { id: 'fr', label: 'Français' },
+];
+
+function toneLabelKey(tone: NotificationTone): TKey {
+  return `tone.label.${tone}` as TKey;
+}
+function toneSampleKey(tone: NotificationTone): TKey {
+  return `tone.sample.${tone}` as TKey;
+}
 
 export function SettingsScreen() {
   const go = useNav((s) => s.go);
+  const t = useT();
   const store = useStore();
   const {
     tone,
@@ -34,6 +54,8 @@ export function SettingsScreen() {
     setEquipment,
     workRhythm,
     setWorkRhythm,
+    language,
+    setLanguage,
     nudgesEnabled,
     setNudgesEnabled,
     isPremium,
@@ -41,14 +63,14 @@ export function SettingsScreen() {
   } = store;
   const [restoring, setRestoring] = useState(false);
 
-  const pickTone = (t: NotificationTone, premium: boolean) => {
+  const pickTone = (toneId: NotificationTone, premium: boolean) => {
     if (premium && !isPremium) {
       go('paywall', { paywallSource: 'tone' });
       return;
     }
     hapticSelect();
-    setTone(t);
-    rescheduleNudges({ enabled: nudgesEnabled, tone: t, rhythm: workRhythm });
+    setTone(toneId);
+    rescheduleNudges({ enabled: nudgesEnabled, tone: toneId, rhythm: workRhythm });
   };
 
   const toggleEquipment = (id: Equipment) => {
@@ -69,56 +91,75 @@ export function SettingsScreen() {
     setRestoring(false);
     if (res.isPremium) {
       setPremium(true);
-      Alert.alert('Restored', 'Your Premium subscription is active.');
+      Alert.alert(t('settings.alert.premiumActive.title'), t('settings.alert.premiumActive.body'));
     } else {
-      Alert.alert('Nothing to restore', 'No active subscription was found for this account.');
+      Alert.alert(
+        t('settings.alert.nothingRestore.title'),
+        t('settings.alert.nothingRestore.body'),
+      );
     }
   };
 
   return (
     <Screen scroll>
-      <Txt variant="title">Settings</Txt>
+      <Txt variant="title">{t('settings.title')}</Txt>
 
       {/* Premium status */}
       <Card style={[styles.premiumCard, isPremium && styles.premiumActive]}>
         <View style={{ flex: 1 }}>
           <Txt variant="h3" color={isPremium ? colors.primaryDark : colors.text}>
-            {isPremium ? '🌟 Premium active' : 'DeskZen Free'}
+            {isPremium ? t('settings.premiumActive') : t('settings.free')}
           </Txt>
           <Txt variant="small" color={colors.textMuted}>
-            {isPremium
-              ? 'Thanks for supporting DeskZen.'
-              : 'Unlock all voices, modes & insights.'}
+            {isPremium ? t('settings.premiumActiveSub') : t('settings.freeSub')}
           </Txt>
         </View>
         {!isPremium && (
-          <Button title="Upgrade" onPress={() => go('paywall', { paywallSource: 'settings' })} />
+          <Button title={t('settings.upgrade')} onPress={() => go('paywall', { paywallSource: 'settings' })} />
         )}
       </Card>
 
+      {/* Language */}
+      <Txt variant="h3" style={styles.section}>
+        {t('settings.section.language')}
+      </Txt>
+      <View style={styles.chips}>
+        {LANGUAGES.map((l) => (
+          <Chip
+            key={l.id}
+            label={l.label}
+            active={language === l.id}
+            onPress={() => {
+              hapticSelect();
+              setLanguage(l.id);
+            }}
+          />
+        ))}
+      </View>
+
       {/* Nudge voice */}
       <Txt variant="h3" style={styles.section}>
-        Nudge voice
+        {t('settings.section.nudgeVoice')}
       </Txt>
-      {TONES.map((t) => {
-        const locked = t.premium && !isPremium;
-        const active = tone === t.tone;
+      {TONES.map((tn) => {
+        const locked = tn.premium && !isPremium;
+        const active = tone === tn.tone;
         return (
           <Pressable
-            key={t.tone}
-            onPress={() => pickTone(t.tone, t.premium)}
+            key={tn.tone}
+            onPress={() => pickTone(tn.tone, tn.premium)}
             style={[styles.toneRow, active && styles.toneRowActive]}
           >
-            <Text style={{ fontSize: 24 }}>{t.emoji}</Text>
+            <Text style={{ fontSize: 24 }}>{tn.emoji}</Text>
             <View style={{ flex: 1 }}>
               <View style={styles.toneTitle}>
                 <Txt variant="bodyStrong" color={active ? colors.primaryDark : colors.text}>
-                  {t.label}
+                  {t(toneLabelKey(tn.tone))}
                 </Txt>
-                {locked && <Tag text="Premium" color={colors.sun} />}
+                {locked && <Tag text={t('settings.premiumTag')} color={colors.sun} />}
               </View>
               <Txt variant="small" color={colors.textMuted}>
-                {t.sample}
+                {t(toneSampleKey(tn.tone))}
               </Txt>
             </View>
             {active && <Txt variant="h3" color={colors.primary}>✓</Txt>}
@@ -133,9 +174,9 @@ export function SettingsScreen() {
       <Card>
         <View style={styles.switchRow}>
           <View style={{ flex: 1 }}>
-            <Txt variant="bodyStrong">Daily reset reminders</Txt>
+            <Txt variant="bodyStrong">{t('settings.nudges.title')}</Txt>
             <Txt variant="small" color={colors.textMuted}>
-              Gentle nudges timed to your work rhythm.
+              {t('settings.nudges.body')}
             </Txt>
           </View>
           <Switch
@@ -148,35 +189,35 @@ export function SettingsScreen() {
           onPress={async () => {
             if (isExpoGo) {
               Alert.alert(
-                'Nudges need a dev build',
-                'Reminders run in a development or App Store / Play build. Expo Go (SDK 53+) no longer supports them.',
+                t('settings.alert.devBuild.title'),
+                t('settings.alert.devBuild.body'),
               );
               return;
             }
             const ok = await sendDemoNudge(tone);
             if (!ok)
               Alert.alert(
-                'Notifications off',
-                'Enable notifications for DeskZen to preview a nudge.',
+                t('settings.alert.notifOff.title'),
+                t('settings.alert.notifOff.body'),
               );
           }}
           style={styles.demo}
         >
           <Txt variant="small" color={colors.primaryDark}>
-            🔔 Preview a nudge (arrives in ~3s)
+            {t('settings.nudges.preview')}
           </Txt>
         </Pressable>
       </Card>
 
       {/* Work rhythm */}
       <Txt variant="h3" style={styles.section}>
-        Work rhythm
+        {t('settings.section.workRhythm')}
       </Txt>
       <View style={styles.chips}>
         {RHYTHMS.map((r) => (
           <Chip
             key={r.id}
-            label={r.label}
+            label={t(r.labelKey)}
             active={workRhythm === r.id}
             onPress={() => {
               hapticSelect();
@@ -189,13 +230,13 @@ export function SettingsScreen() {
 
       {/* Equipment */}
       <Txt variant="h3" style={styles.section}>
-        Desk equipment
+        {t('settings.section.equipment')}
       </Txt>
       <View style={styles.chips}>
         {EQUIPMENT.map((e) => (
           <Chip
             key={e.id}
-            label={e.label}
+            label={t(e.labelKey)}
             active={equipment.includes(e.id)}
             onPress={() => toggleEquipment(e.id)}
           />
@@ -204,24 +245,22 @@ export function SettingsScreen() {
 
       {/* Account */}
       <Txt variant="h3" style={styles.section}>
-        Account
+        {t('settings.section.account')}
       </Txt>
-      <Button title="Restore purchases" variant="secondary" loading={restoring} onPress={onRestore} />
+      <Button title={t('settings.restore')} variant="secondary" loading={restoring} onPress={onRestore} />
       <Button
-        title="Reset all data"
+        title={t('settings.resetData')}
         variant="ghost"
         onPress={() =>
-          Alert.alert('Reset all data?', 'This clears your garden, streak and history.', [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Reset', style: 'destructive', onPress: () => store.resetAll() },
+          Alert.alert(t('settings.alert.resetData.title'), t('settings.alert.resetData.body'), [
+            { text: t('settings.alert.cancel'), style: 'cancel' },
+            { text: t('settings.alert.reset'), style: 'destructive', onPress: () => store.resetAll() },
           ])
         }
       />
 
       <Txt variant="tiny" color={colors.textFaint} style={styles.disclaimer}>
-        DeskZen supports general wellbeing and healthy break habits. It is not a
-        medical device and does not diagnose, treat, or prevent any condition.
-        Breathing exercises are gentle by design — stop if you feel lightheaded.
+        {t('settings.disclaimer')}
       </Txt>
     </Screen>
   );

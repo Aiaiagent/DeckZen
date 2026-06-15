@@ -9,6 +9,7 @@ import {
   Equipment,
   WorkRhythm,
   Exercise,
+  Language,
 } from '../types';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -25,6 +26,7 @@ interface PersistedState {
   workRhythm: WorkRhythm;
   equipment: Equipment[];
   tone: NotificationTone;
+  language: Language;
 
   // Monetization
   isPremium: boolean;
@@ -49,6 +51,7 @@ interface Actions {
   setTone: (tone: NotificationTone) => void;
   setEquipment: (equipment: Equipment[]) => void;
   setWorkRhythm: (workRhythm: WorkRhythm) => void;
+  setLanguage: (language: Language) => void;
   setNudgesEnabled: (enabled: boolean) => void;
   setPremium: (value: boolean) => void;
 
@@ -70,6 +73,7 @@ const initialPersisted: PersistedState = {
   workRhythm: 'nineToSix',
   equipment: ['none'],
   tone: 'cute',
+  language: 'en',
   isPremium: false,
   gardenPoints: 0,
   streak: 0,
@@ -88,6 +92,7 @@ export const useStore = create<StoreState>()(
         set({ onboarded: true, workRhythm, equipment, tone }),
 
       setTone: (tone) => set({ tone }),
+      setLanguage: (language) => set({ language }),
       setEquipment: (equipment) =>
         set({ equipment: equipment.length ? equipment : ['none'] }),
       setWorkRhythm: (workRhythm) => set({ workRhythm }),
@@ -159,6 +164,7 @@ export const useStore = create<StoreState>()(
         workRhythm: s.workRhythm,
         equipment: s.equipment,
         tone: s.tone,
+        language: s.language,
         isPremium: s.isPremium,
         gardenPoints: s.gardenPoints,
         streak: s.streak,

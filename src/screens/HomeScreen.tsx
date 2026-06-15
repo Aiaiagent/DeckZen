@@ -8,16 +8,18 @@ import { useNav } from '../navigation/nav';
 import { deriveMood } from '../data/garden';
 import { recommend } from '../data/engine';
 import { hapticTap } from '../services/haptics';
+import { useT, TKey } from '../i18n';
 
 export function HomeScreen() {
   const go = useNav((s) => s.go);
+  const t = useT();
   const { gardenPoints, streak, isPremium } = useStore();
   const resetsToday = useStore((s) => s.resetsToday());
   const hoursSince = useStore((s) => s.hoursSinceLastReset());
 
   const mood = deriveMood({ hoursSinceLastReset: hoursSince, resetsToday });
-  const greeting = getGreeting();
-  const contextLine = getContextLine(mood, resetsToday);
+  const greeting = t(greetingKey());
+  const contextLine = t(contextLineKey(mood, resetsToday));
 
   const quickReset = () => {
     const ex = recommend({
@@ -54,15 +56,15 @@ export function HomeScreen() {
       <DeskGarden points={gardenPoints} mood={mood} />
 
       <View style={styles.chips}>
-        <ProgressChip emoji="✅" value={`${resetsToday}`} label="today" />
-        <ProgressChip emoji="🔥" value={`${streak}`} label="streak" />
-        <ProgressChip emoji="✨" value={`${gardenPoints}`} label="points" />
+        <ProgressChip emoji="✅" value={`${resetsToday}`} label={t('home.chip.today')} />
+        <ProgressChip emoji="🔥" value={`${streak}`} label={t('home.chip.streak')} />
+        <ProgressChip emoji="✨" value={`${gardenPoints}`} label={t('home.chip.points')} />
       </View>
 
       <View style={styles.actions}>
-        <Button title="Reset 2 minutes" onPress={quickReset} />
+        <Button title={t('home.reset2min')} onPress={quickReset} />
         <Button
-          title="Check in first"
+          title={t('home.checkInFirst')}
           variant="secondary"
           onPress={() => go('checkin')}
           style={styles.secondaryBtn}
@@ -73,12 +75,12 @@ export function HomeScreen() {
         <View style={styles.modes}>
           <ModeChip
             emoji="🔁"
-            label="Meeting Recovery"
+            label={t('home.mode.meeting')}
             onPress={() => startMode('meetingRecovery')}
           />
           <ModeChip
             emoji="🔥"
-            label="Deadline Survival"
+            label={t('home.mode.deadline')}
             onPress={() => startMode('deadlineSurvival')}
           />
         </View>
@@ -96,11 +98,10 @@ export function HomeScreen() {
           <Text style={styles.upsellEmoji}>🌿</Text>
           <View style={{ flex: 1 }}>
             <Txt variant="bodyStrong" color={colors.primaryDark}>
-              Try Premium
+              {t('home.upsell.title')}
             </Txt>
             <Txt variant="small" color={colors.textMuted} style={styles.upsellDesc}>
-              Unlock adaptive resets for meetings, deadlines, and low-energy
-              afternoons.
+              {t('home.upsell.body')}
             </Txt>
           </View>
           <Txt variant="h2" color={colors.primaryDark}>
@@ -112,22 +113,20 @@ export function HomeScreen() {
   );
 }
 
-function getGreeting(): string {
+function greetingKey(): TKey {
   const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
-  return 'Good evening';
+  if (h < 12) return 'home.greetingMorning';
+  if (h < 18) return 'home.greetingAfternoon';
+  return 'home.greetingEvening';
 }
 
-function getContextLine(mood: string, resetsToday: number): string {
-  if (mood === 'wilting')
-    return "It's been a while. Your body could use a tiny reset.";
-  if (mood === 'stressed')
-    return "You've been focused for a while. Time to loosen up.";
-  if (mood === 'thriving') return "You're on a roll today. Keep it gentle.";
-  if (mood === 'recovering') return 'Nicely reset. Your desk is brightening up.';
-  if (resetsToday === 0) return 'A calm moment to start. Ready for a reset?';
-  return 'A good time for a tiny reset.';
+function contextLineKey(mood: string, resetsToday: number): TKey {
+  if (mood === 'wilting') return 'home.ctx.wilting';
+  if (mood === 'stressed') return 'home.ctx.stressed';
+  if (mood === 'thriving') return 'home.ctx.thriving';
+  if (mood === 'recovering') return 'home.ctx.recovering';
+  if (resetsToday === 0) return 'home.ctx.start';
+  return 'home.ctx.default';
 }
 
 function ProgressChip({

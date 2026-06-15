@@ -4,17 +4,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, font, shadow } from '../theme';
 import { Route, TABS, useNav } from '../navigation/nav';
 import { hapticSelect } from '../services/haptics';
+import { useT, TKey } from '../i18n';
 
-const META: Record<string, { label: string; emoji: string }> = {
-  home: { label: 'Desk', emoji: '🪴' },
-  insights: { label: 'Insights', emoji: '📊' },
-  settings: { label: 'Settings', emoji: '⚙️' },
+const META: Record<string, { labelKey: TKey; emoji: string }> = {
+  home: { labelKey: 'tab.desk', emoji: '🪴' },
+  insights: { labelKey: 'tab.insights', emoji: '📊' },
+  settings: { labelKey: 'tab.settings', emoji: '⚙️' },
 };
 
 export function TabBar() {
   const insets = useSafeAreaInsets();
   const route = useNav((s) => s.route);
   const go = useNav((s) => s.go);
+  const t = useT();
 
   return (
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
@@ -38,7 +40,7 @@ export function TabBar() {
                 { color: active ? colors.primaryDark : colors.textFaint },
               ]}
             >
-              {META[tab].label.toUpperCase()}
+              {t(META[tab].labelKey).toUpperCase()}
             </Text>
           </Pressable>
         );

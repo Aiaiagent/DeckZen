@@ -7,25 +7,34 @@ import { Equipment, NotificationTone, WorkRhythm } from '../types';
 import { TONES } from '../data/tones';
 import { hapticSelect } from '../services/haptics';
 import { rescheduleNudges } from '../services/notifications';
+import { useT, TKey } from '../i18n';
 
-const RHYTHMS: { id: WorkRhythm; label: string; emoji: string }[] = [
-  { id: 'nineToSix', label: '9 to 6', emoji: '🏢' },
-  { id: 'hybrid', label: 'Hybrid / remote', emoji: '🏡' },
-  { id: 'freelance', label: 'Freelance', emoji: '🧑‍💻' },
-  { id: 'nightShift', label: 'Night shift', emoji: '🌙' },
+const RHYTHMS: { id: WorkRhythm; labelKey: TKey; emoji: string }[] = [
+  { id: 'nineToSix', labelKey: 'rhythm.nineToSix', emoji: '🏢' },
+  { id: 'hybrid', labelKey: 'rhythm.hybrid', emoji: '🏡' },
+  { id: 'freelance', labelKey: 'rhythm.freelance', emoji: '🧑‍💻' },
+  { id: 'nightShift', labelKey: 'rhythm.nightShift', emoji: '🌙' },
 ];
 
-const EQUIPMENT: { id: Equipment; label: string; emoji: string }[] = [
-  { id: 'stressBall', label: 'Stress ball', emoji: '🔴' },
-  { id: 'massageRoller', label: 'Massage roller', emoji: '🧻' },
-  { id: 'ergoChair', label: 'Ergo chair', emoji: '🪑' },
-  { id: 'standingDesk', label: 'Standing desk', emoji: '🧍' },
+const EQUIPMENT: { id: Equipment; labelKey: TKey; emoji: string }[] = [
+  { id: 'stressBall', labelKey: 'equipment.stressBall', emoji: '🔴' },
+  { id: 'massageRoller', labelKey: 'equipment.massageRoller', emoji: '🧻' },
+  { id: 'ergoChair', labelKey: 'equipment.ergoChair', emoji: '🪑' },
+  { id: 'standingDesk', labelKey: 'equipment.standingDesk', emoji: '🧍' },
 ];
+
+function toneLabelKey(tone: NotificationTone): TKey {
+  return `tone.label.${tone}` as TKey;
+}
+function toneSampleKey(tone: NotificationTone): TKey {
+  return `tone.sample.${tone}` as TKey;
+}
 
 const STEP_COUNT = 4;
 
 export function OnboardingScreen() {
   const completeOnboarding = useStore((s) => s.completeOnboarding);
+  const t = useT();
   const [step, setStep] = useState(0);
   const [rhythm, setRhythm] = useState<WorkRhythm>('nineToSix');
   const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -45,7 +54,11 @@ export function OnboardingScreen() {
   };
 
   const ctaLabel =
-    step === 0 ? 'Set up my Desk Garden' : step === 3 ? "Let's go" : 'Continue';
+    step === 0
+      ? t('onboarding.cta.setup')
+      : step === 3
+        ? t('onboarding.cta.go')
+        : t('onboarding.cta.continue');
 
   return (
     <Screen scroll contentStyle={styles.content}>
@@ -68,31 +81,29 @@ export function OnboardingScreen() {
           </View>
 
           <Txt variant="hero" style={styles.heroTitle}>
-            Reset your workday{'\n'}in 2 minutes.
+            {t('onboarding.hero.title')}
           </Txt>
           <Txt variant="body" color={colors.textMuted} style={styles.heroSub}>
-            Tiny breaks for stressful meetings, tired eyes, stiff shoulders, and
-            deadline mode.
+            {t('onboarding.hero.sub')}
           </Txt>
           <Txt variant="small" color={colors.textFaint} style={styles.heroSupport}>
-            No yoga mat. No awkward office stretches. Just quick resets that fit
-            your desk.
+            {t('onboarding.hero.support')}
           </Txt>
         </View>
       )}
 
       {step === 1 && (
         <View style={styles.stepBody}>
-          <Txt variant="title">What's your work rhythm?</Txt>
+          <Txt variant="title">{t('onboarding.rhythm.title')}</Txt>
           <Txt variant="body" color={colors.textMuted} style={styles.lead}>
-            We'll time nudges around when you're actually at your desk.
+            {t('onboarding.rhythm.sub')}
           </Txt>
           <View style={styles.grid}>
             {RHYTHMS.map((r) => (
               <Choice
                 key={r.id}
                 emoji={r.emoji}
-                label={r.label}
+                label={t(r.labelKey)}
                 active={rhythm === r.id}
                 onPress={() => {
                   hapticSelect();
@@ -106,16 +117,16 @@ export function OnboardingScreen() {
 
       {step === 2 && (
         <View style={styles.stepBody}>
-          <Txt variant="title">Anything on your desk?</Txt>
+          <Txt variant="title">{t('onboarding.equipment.title')}</Txt>
           <Txt variant="body" color={colors.textMuted} style={styles.lead}>
-            Optional. We'll suggest resets that use what you've got. Pick any.
+            {t('onboarding.equipment.sub')}
           </Txt>
           <View style={styles.grid}>
             {EQUIPMENT.map((e) => (
               <Choice
                 key={e.id}
                 emoji={e.emoji}
-                label={e.label}
+                label={t(e.labelKey)}
                 active={equipment.includes(e.id)}
                 onPress={() => toggleEquipment(e.id)}
               />
@@ -126,25 +137,25 @@ export function OnboardingScreen() {
 
       {step === 3 && (
         <View style={styles.stepBody}>
-          <Txt variant="title">Pick your nudge voice</Txt>
+          <Txt variant="title">{t('onboarding.tone.title')}</Txt>
           <Txt variant="body" color={colors.textMuted} style={styles.lead}>
-            How should DeskZen talk to you? (You can change this anytime.)
+            {t('onboarding.tone.sub')}
           </Txt>
-          {TONES.filter((t) => !t.premium).map((t) => (
+          {TONES.filter((tn) => !tn.premium).map((tn) => (
             <ToneRow
-              key={t.tone}
-              active={tone === t.tone}
-              emoji={t.emoji}
-              label={t.label}
-              sample={t.sample}
+              key={tn.tone}
+              active={tone === tn.tone}
+              emoji={tn.emoji}
+              label={t(toneLabelKey(tn.tone))}
+              sample={t(toneSampleKey(tn.tone))}
               onPress={() => {
                 hapticSelect();
-                setTone(t.tone);
+                setTone(tn.tone);
               }}
             />
           ))}
           <Txt variant="small" color={colors.textFaint} style={{ marginTop: spacing.sm }}>
-            More voices (Gen Z Roast, Corporate, Calm Coach) unlock with Premium.
+            {t('onboarding.tone.premiumNote')}
           </Txt>
         </View>
       )}
@@ -155,14 +166,13 @@ export function OnboardingScreen() {
           onPress={() => (step === 3 ? finish() : setStep((s) => s + 1))}
         />
         {step > 0 && (
-          <Button title="Back" variant="ghost" onPress={() => setStep((s) => s - 1)} />
+          <Button title={t('onboarding.back')} variant="ghost" onPress={() => setStep((s) => s - 1)} />
         )}
       </View>
 
       {step === 0 && (
         <Txt variant="tiny" color={colors.textFaint} style={styles.disclaimer}>
-          DeskZen supports general wellbeing and break habits. It is not a medical
-          device and does not diagnose or treat any condition.
+          {t('onboarding.disclaimer')}
         </Txt>
       )}
     </Screen>
